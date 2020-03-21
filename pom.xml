@@ -71,6 +71,11 @@
             <artifactId>vavr</artifactId>
             <version>0.10.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.sendgrid</groupId>
+            <artifactId>sendgrid-java</artifactId>
+            <version>4.4.6</version>
+        </dependency>
 
         <dependency>
             <groupId>org.webjars</groupId>
