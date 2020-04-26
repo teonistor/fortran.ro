@@ -6,10 +6,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import javax.sql.DataSource;
 import java.util.regex.Pattern;
 
 import static org.springframework.security.web.csrf.CsrfFilter.DEFAULT_CSRF_MATCHER;
@@ -18,17 +16,13 @@ import static org.springframework.security.web.csrf.CsrfFilter.DEFAULT_CSRF_MATC
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements WebMvcConfigurer {
 
     private static final Pattern CSRF_ENABLED_URIS = Pattern.compile("/login|/logout|/any.*");
-    private static final String ROLE_PREFIX = "ROLE_";
-
-    // create table snoop_users (principal varchar primary key, credentials varchar not null, role varchar not null default 'USER');
-    // insert into snoop_users (principal, credentials) values ('user', 'password');
 
     @Autowired
     public void configureGlobal(final AuthenticationManagerBuilder auth) throws Exception {
 
         auth
             .inMemoryAuthentication()
-            .withUser("user").password("{enc}password").roles("USER");
+            .withUser("user").password("{bcrypt}$2a$10$zUi5vlxz/BrgAh2qbUmv9egCanrFjCD2A5se9Kj1jjR5ArC4GtSJG").roles("USER");
 
     }
 
@@ -40,12 +34,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements W
                  * The Heroku router sets the "X-Forwarded-Proto" header, therefore its presence is a good way to distinguish server
                  * requests from localhost requests. Spring Security magic handles redirection to https
                  */
+                /* Leave out for now until we figure out certificates on own domain
                 .requiresChannel()
                 .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null)
                 .requiresSecure()
-                .and()
+                .and()*/
 
-                // CSRF for Spring Security's default methods and only for pages where I've set it up
+                // CSRF for Spring Security's default methods
                 // N.b.   https://www.baeldung.com/spring-security-csrf
                 //   and  https://stackoverflow.com/a/34994299
                 .csrf().requireCsrfProtectionMatcher(r -> DEFAULT_CSRF_MATCHER.matches(r)
@@ -54,20 +49,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements W
 
                 .authorizeRequests()
 
-                .antMatchers("/videohub/**")
-                .hasAnyRole("ADMIN", "USER")
-
-                .antMatchers("/any/login", "/any/find/*")
+                .antMatchers("/secure")
                 .hasAnyRole("ADMIN", "USER")
 
                 .antMatchers("/**")
                 .permitAll()
         ;
-    }
-
-    @Override
-    public void addCorsMappings(final CorsRegistry registry) {
-        registry.addMapping("/**").allowedOrigins("https://teonistor.github.io");
     }
 
     // For manual password alteration
