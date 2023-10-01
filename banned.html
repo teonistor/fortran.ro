@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=0.9">
+  <link rel="icon" href="favicon.ico">
+  <title>Banned & Recommended Lists | fortran.ro</title>
+</head>
+<body>
+<div id="banned-list"><small>Loading...</small></div>
+<div id="recommended-list"><small>Loading...</small></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.0.3/marked.min.js"></script>
+<script>
+function usefulErrorDetail(error) {
+  const line1 = 'Could not load content:' + (error.response && error.response.status && ' ' + error.response.status || '');
+  const detail = error.response && error.response.data || error;
+  if (typeof(detail) === 'string')
+    return line1 + '<br>' + detail;
+  return line1 + '<br>' + JSON.stringify(detail);
+}
+
+function getSet(file, id) {
+  axios.get('https://teonistor-herokuapp-prod.s3.eu-west-2.amazonaws.com/data/misc/' + file)
+    .then(response => document.querySelector('#' + id).innerHTML =
+      marked.marked(response.data, { smartypants: true, gfm: true, breaks: true }))
+    .catch(error => document.querySelector('#' + id).innerHTML = usefulErrorDetail(error));
+}
+
+getSet('banned.md', 'banned-list');
+getSet('recommended.md', 'recommended-list');
+</script>
+</body>
+
+<style>
+  body {
+      background: rgb(103,90,73);
+      color: white;
+  }
+</style>
+</html>
